@@ -84,7 +84,7 @@ def psk(bits, f=5, bit_duration=1, samples_per_bit=100):
     signal = np.concatenate([np.sin(2 * np.pi * f * t + (0 if bit == '0' else np.pi)) for bit in bits])
     return signal, t
 
-# Plot signal function
+
 def plot_signal(bits, coding_name):
     n = len(bits)
     samples_per_bit = 100
@@ -102,17 +102,16 @@ def plot_signal(bits, coding_name):
         ax.step(time, signal, where='post')
         bit_positions = np.arange(0, len(bits) * 2, 2)
         ax.set_xticks(bit_positions)
-        ax.set_xticklabels(range(len(bits)))  # label each bit
+        ax.set_xticklabels(range(len(bits))) 
 
     ax.set_title(f"{coding_name} Signal")
     ax.set_xlabel("Time")
     ax.set_ylabel("Amplitude")
-    ax.set_ylim([-1.5, 1.5])  # Adjust y-axis limits if needed
+    ax.set_ylim([-1.5, 1.5])  
     ax.grid(True)
     
     return fig
 
-# Function to handle the plot button click
 def plot_button_click():
     global canvas
     bits = bit_sequence.get()
@@ -123,7 +122,7 @@ def plot_button_click():
         return
     
     if coding_name.lower() not in globals():
-        messagebox.showerror("Invalid Function", "Please enter a valid coding/modulation function name.")
+        messagebox.showerror("Invalid Function", "Please enter a valid modulation function name.")
         return
     
     if canvas:
@@ -134,27 +133,21 @@ def plot_button_click():
     canvas.draw()
     canvas.get_tk_widget().pack()
 
-# Create the main Tkinter window
 root = Tk()
 root.title("Signal Plotter")
 
-# Global canvas variable to hold the plot
 canvas = None
 
-# Bit sequence input
 Label(root, text="Enter the bit sequence:").pack()
 bit_sequence = StringVar()
 Entry(root, textvariable=bit_sequence).pack()
 
-# Coding/modulation function selection
 Label(root, text="Select the coding/modulation function:").pack()
 coding_name_var = StringVar(root)
-coding_name_var.set("ami")  # default value
+coding_name_var.set("ami")  # default  svalue
 options = ["ami", "rz", "nrz", "manchester", "hdb3", "ask", "fsk", "qam", "psk"]
 OptionMenu(root, coding_name_var, *options).pack()
 
-# Plot button
 Button(root, text="Plot Signal", command=plot_button_click).pack()
 
-# Start the Tkinter event loop
 root.mainloop()
