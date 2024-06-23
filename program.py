@@ -4,64 +4,130 @@ from tkinter import Tk, Label, Entry, Button, StringVar, OptionMenu, messagebox
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
 
-def ami(bits):
+# def ami(bits):
+#     signal = []
+#     last_voltage = 1  # start with positive voltage
+#     for bit in bits:
+#         if bit == '1':
+#             signal.append(last_voltage)
+#             last_voltage *= -1  # toggle voltage on each '1'
+#         else:
+#             signal.append(0)  # represent '0' with zero voltage
+#     return signal
+
+# def rz(bits):
+#     signal = []
+#     for bit in bits:
+#         if bit == '1':
+#             signal.extend([1, 0])  # high for first half, low for second half
+#         else:
+#             signal.extend([0, 0])  # low for both halves for '0'
+#     return signal
+
+# def nrz(bits):
+#     signal = [1 if bit == '1' else -1 for bit in bits]
+#     return signal
+
+# def manchester(bits):
+#     signal = []
+#     for bit in bits:
+#         if bit == '1':
+#             signal.extend([-1, 1])  # high to low for '1'
+#         else:
+#             signal.extend([1, -1])  # low to high for '0'
+#     return signal
+
+# def hdb3(bits):
+#     signal = []
+#     last_nonzero = 1
+#     zero_count = 0
+#     for bit in bits:
+#         if bit == '1':
+#             if zero_count == 4:
+#                 signal[-4] = last_nonzero
+#                 signal.append(0)
+#                 zero_count = 0
+#             else:
+#                 signal.append(last_nonzero)
+#                 last_nonzero *= -1
+#             zero_count = 0
+#         else:
+#             zero_count += 1
+#             if zero_count == 4:
+#                 if last_nonzero == -1:
+#                     signal.extend([0, 0, 0, 1])
+#                 else:
+#                     signal.extend([0, 0, 0, -1])
+#                 zero_count = 0
+#             else:
+#                 signal.append(0)
+#     return signal
+
+
+def ami(bits, bit_duration=1, samples_per_bit=100):
+    t = np.linspace(0, bit_duration * len(bits), samples_per_bit * len(bits))
     signal = []
     last_voltage = 1  # start with positive voltage
     for bit in bits:
         if bit == '1':
-            signal.append(last_voltage)
+            signal.extend([last_voltage] * samples_per_bit)
             last_voltage *= -1  # toggle voltage on each '1'
         else:
-            signal.append(0)  # represent '0' with zero voltage
-    return signal
+            signal.extend([0] * samples_per_bit)  # represent '0' with zero voltage
+    return np.array(signal), t
 
-def rz(bits):
+def rz(bits, bit_duration=1, samples_per_bit=100):
+    t = np.linspace(0, bit_duration * len(bits), samples_per_bit * len(bits) * 2)
     signal = []
     for bit in bits:
         if bit == '1':
-            signal.extend([1, 0])  # high for first half, low for second half
+            signal.extend([1] * (samples_per_bit // 2) + [0] * (samples_per_bit // 2))  # high for first half, low for second half
         else:
-            signal.extend([0, 0])  # low for both halves for '0'
-    return signal
+            signal.extend([0] * samples_per_bit)  # low for both halves for '0'
+    return np.array(signal), t
 
-def nrz(bits):
+def nrz(bits, bit_duration=1, samples_per_bit=100):
+    t = np.linspace(0, bit_duration * len(bits), samples_per_bit * len(bits))
     signal = [1 if bit == '1' else -1 for bit in bits]
-    return signal
+    signal = np.repeat(signal, samples_per_bit)  # repeat each value for the duration of samples_per_bit
+    return np.array(signal), t
 
-def manchester(bits):
+def manchester(bits, bit_duration=1, samples_per_bit=100):
+    t = np.linspace(0, bit_duration * len(bits), samples_per_bit * len(bits) * 2)
     signal = []
     for bit in bits:
         if bit == '1':
-            signal.extend([-1, 1])  # high to low for '1'
+            signal.extend([-1] * (samples_per_bit // 2) + [1] * (samples_per_bit // 2))  # high to low for '1'
         else:
-            signal.extend([1, -1])  # low to high for '0'
-    return signal
+            signal.extend([1] * (samples_per_bit // 2) + [-1] * (samples_per_bit // 2))  # low to high for '0'
+    return np.array(signal), t
 
-def hdb3(bits):
+def hdb3(bits, bit_duration=1, samples_per_bit=100):
+    t = np.linspace(0, bit_duration * len(bits), samples_per_bit * len(bits))
     signal = []
     last_nonzero = 1
     zero_count = 0
     for bit in bits:
         if bit == '1':
             if zero_count == 4:
-                signal[-4] = last_nonzero
-                signal.append(0)
+                signal[-4 * samples_per_bit] = last_nonzero
+                signal.extend([0] * samples_per_bit)
                 zero_count = 0
             else:
-                signal.append(last_nonzero)
+                signal.extend([last_nonzero] * samples_per_bit)
                 last_nonzero *= -1
             zero_count = 0
         else:
             zero_count += 1
             if zero_count == 4:
                 if last_nonzero == -1:
-                    signal.extend([0, 0, 0, 1])
+                    signal.extend([0, 0, 0, 1] * samples_per_bit)
                 else:
-                    signal.extend([0, 0, 0, -1])
+                    signal.extend([0, 0, 0, -1] * samples_per_bit)
                 zero_count = 0
             else:
-                signal.append(0)
-    return signal
+                signal.extend([0] * samples_per_bit)
+    return np.array(signal), t
 
 def ask(bits, amp1=1, amp0=0.5, bit_duration=1, samples_per_bit=100):
     t = np.linspace(0, bit_duration, samples_per_bit)
